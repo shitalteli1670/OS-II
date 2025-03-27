@@ -1,173 +1,107 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
-#define MAX 200
-typedef struct dir
+#include <stdio.h>
+#include <stdlib.h>
+void displayMatrix(int matrix[][10], int m, int n) 
 {
-	char fname[20];
-	int start,length;
-	struct dir *next;
-}NODE;
-NODE *first,*last;
-int bit[MAX],n;
-void init()
-{
-	int i;
-	printf("Enter total no of disk blocks");
-	scanf("%d",&n);
-	for(i=0;i<10;i++)
-	{
-		int k=rand()%n;
-		bit[k]=1;
-	}
-}  
-void show_bitvector()
-{
-	int i;
-	for(i=0;i<n;i++)
-	{
-		printf("%d",bit[i]);
-	}
-	printf("\n");
-}
-void show_dir()
-{
-	NODE *p;
-	printf("file \t start\t length\n");
-	p=first;
-	while(p!=NULL)
-	{
-		printf("%s\t%d\t%d\n",p->fname,p->start,p->length);
-		p=p->next;
-	}
+    for (int i = 0; i < m; i++) 
+    {
+        for (int j = 0; j < n; j++) {
+            printf("%d ", matrix[i][j]);
+        }
+        printf("\n");
+    }
 }
 
-void create() {
-	NODE *p;
-	char fname[20];
-	int nob, i = 0, j = 0, start;
-
-	printf("Enter the file name\n");
-	scanf("%s", fname);
-	printf("Enter no of blocks\n");
-	scanf("%d", &nob);
-
-	while (1) {
-		while (i < n) {
-			if (bit[i] == 0)
-				break;
-			i++;
-		}
-
-		if (i < n) {
-			start = i;
-			j = 1;
-			while (j < nob && i < n && bit[i] == 0) {
-				i++;
-				j++;
-			}
-
-			if (j == nob) {
-				p = (NODE *)malloc(sizeof(NODE));
-				strcpy(p->fname, fname);
-				p->start = start;
-				p->length = nob;
-				p->next = NULL;
-
-				if (first == NULL) { 
-					first = p;
-				} else {
-					last->next = p;
-				}
-				last = p;
-
-				for (j = 0; j < nob; j++) {
-					bit[j + start] = 1;
-				}
-
-				printf("File %s created successfully\n", fname);
-				return;
-			}
-		} else {
-			printf("Failed to create file %s\n", fname);
-			return;
-		}
-	}
+void calculateNeedMatrix(int allocation[][10], int max[][10], int need[][10], int m, int n) {
+    for (int i = 0; i < m; i++) 
+    {
+        for (int j = 0; j < n; j++) 
+        {
+            need[i][j] = max[i][j] - allocation[i][j];
+        }
+    }
 }
-
-
-void delete()
+int canGrantRequest(int request[], int available[], int need[][10], int process_id, int n) {
+    for (int i = 0; i < n; i++) 
+    {
+        if (request[i] > need[process_id][i]) 
+        {
+            return 0;
+        }
+        if (request[i] > available[i]) 
+        {
+            return 0; 
+        }
+    }
+    return 1;
+}
+int main() 
 {
-	NODE *p,*q;
-	char fname[20];
-	int i;
-	printf("Enter file to be deleted\n");
-	scanf("%s",fname);
-	p=q=first;
-	while(p!=NULL)
-	{
-		if(strcmp(p->fname,fname)==0)
-		{
-			break;
-		}
-		q=p;
-		p=p->next;
-	}
-	if(p==NULL)
-	{
-		printf("file %s not found\n",fname);
-		return;
-	}
-	for(i=0;i<p->length;i++)
-	{
-		bit[p->start+i]=0;
-	}
-	if(p==first)
-	{
-		first=first->next;
-	}
-	else if(p==last)
-	{
-		last=q;
-		last->next=NULL;
-	}
-	else
-	{
-		q->next=p->next;
-	}
-	free(p);
-	printf("File %s deleted successfully\n",fname);
+    int m, n;
+    printf("Enter the number of processes: ");
+    scanf("%d", &m);
+    printf("Enter the number of resource types: ");
+    scanf("%d", &n);
+    int allocation[10][10], max[10][10], available[10], need[10][10], request[10], process_id;
+    printf("Enter the Allocation Matrix:\n");
+    for (int i = 0; i < m; i++) 
+    {
+        for (int j = 0; j < n; j++) 
+        {
+            scanf("%d", &allocation[i][j]);
+        }
+    }
+
+    printf("Enter the Maximum Matrix:\n");
+    for (int i = 0; i < m; i++) 
+    {
+        for (int j = 0; j < n; j++) 
+        {
+            scanf("%d", &max[i][j]);
+        }
+    }
+    printf("Enter the Available resources:\n");
+    for (int i = 0; i < n; i++) 
+    {
+        scanf("%d", &available[i]);
+    }
+    calculateNeedMatrix(allocation, max, need, m, n);
+    printf("\nNeed Matrix:\n");
+    displayMatrix(need, m, n);
+    printf("Enter the process number making the request (0 to %d): ", m - 1);
+    scanf("%d", &process_id);
+    printf("Enter the request for process P%d: ", process_id);
+    for (int i = 0; i < n; i++) 
+    {
+        scanf("%d", &request[i]);
+    }
+    if (canGrantRequest(request, available, need, process_id, n)) 
+    {
+        printf("The request can be granted immediately.\n");
+    } else {
+        printf("The request cannot be granted immediately.\n");
+    }
+    return 0;
 }
-int main()
-{
-	int ch;
-	init();
-	while(1)
-	{
-		printf("1.Show bit vector\n");
-		printf("2.create new file\n");
-		printf("3.Show directory\n");
-		printf("4.Delete file\n");
-		printf("5.Exit\n");
-		printf("Enter your choice(1-5):");
-		scanf("%d",&ch);
-		switch(ch)
-		{
-			case 1:
-				show_bitvector();
-				break;
-			case 2:
-				create();
-				break;
-			case 3:
-				show_dir();
-				break;
-			case 4:
-				delete();
-				break;
-			case 5:
-				exit(0);
-		}
-	}
-	return 0;
-}
+
+/*  Enter the number of processes: 3
+Enter the number of resource types: 3
+Enter the Allocation Matrix:
+0 1 0
+2 0 0
+3 0 3
+Enter the Maximum Matrix:
+7 5 3
+3 2 2
+9 0 2
+Enter the Available resources:
+3 3 2
+
+Need Matrix:
+7 4 3
+1 2 2
+6 0 -1
+
+Enter the process number making the request (0 to 2): 1
+Enter the request for process P1: 1 0 2
+
+The request can be granted immediately.    */
