@@ -41,3 +41,9 @@ int main(int argc, char** argv)
     MPI_Finalize();
     return 0;
 }
+
+/* mpicc Slip2_2.c -o Slip2_2
+mpirun --oversubscribe -np 4 ./Slip2_2
+Generating 1000 random numbers...
+Total Sum: 50514
+Average: 50.51 */

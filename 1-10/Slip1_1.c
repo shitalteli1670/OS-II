@@ -1,151 +1,119 @@
-/* Q.1 ) Write a C Menu driven Program to implement following functionality
-a) Accept Available
-b) Display Allocation, Max
-c) Display the contents of need matrix
-d) Display Available */
-
 #include <stdio.h>
-int N, M, Available[10], tempAvailable[10], Max[10][10], Alloc[10][10], Need[10][10], safeseq[10];
-void AcceptInput()
-{
-    int i, j;
-    printf("\nEnter The Number Of Processes: ");
-    scanf("%d", &N);
-    printf("\nEnter The Number Of Resource Types: ");
-    scanf("%d", &M);
-    printf("\nEnter Available: ");
-    for (i = 0; i < M; i++)
-    {
-        scanf("%d", &Available[i]);
-        tempAvailable[i] = Available[i];
-    }
-    printf("\nEnter Max: ");
-    for (i = 0; i < N; i++)
-    {
-        for (j = 0; j < M; j++)
-        {
-            scanf("%d", &Max[i][j]);
+#define PROCESS_COUNT 5
+#define RESOURCE_COUNT 3
+int available[RESOURCE_COUNT];
+int allocation[PROCESS_COUNT][RESOURCE_COUNT] = {
+    {2, 3, 2},
+    {4, 0, 0},
+    {5, 0, 4},
+    {4, 3, 3},
+    {2, 2, 4}
+};
+int max[PROCESS_COUNT][RESOURCE_COUNT] = {
+    {9, 7, 5},
+    {5, 2, 2},
+    {1, 0, 4},
+    {4, 4, 4},
+    {6, 5, 5}
+};
+int need[PROCESS_COUNT][RESOURCE_COUNT];
+void calculateNeedMatrix() {
+    for (int i = 0; i < PROCESS_COUNT; i++) {
+        for (int j = 0; j < RESOURCE_COUNT; j++) {
+            need[i][j] = max[i][j] - allocation[i][j];
         }
     }
-    printf("\nEnter Allocation: ");
-    for (i = 0; i < N; i++)
-    {
-        for (j = 0; j < M; j++)
-        {
-            scanf("%d", &Alloc[i][j]);
-        }
-    }
-
-    for (i = 0; i < N; i++)
-        safeseq[i] = -1;
 }
-void DisplayMatrix(int a[10][10], int rows, int cols)
+void displayAllocationAndMax() 
 {
-    int i, j;
-    for (i = 0; i < rows; i++)
-    {
-        for (j = 0; j < cols; j++)
-        {
-            printf("%5d", a[i][j]);
+    printf("Process\tAllocation\tMax\n");
+    printf("\tA B C\t\tA B C\n");
+    
+    for (int i = 0; i < PROCESS_COUNT; i++) {
+        printf("P%d\t", i);
+        
+        for (int j = 0; j < RESOURCE_COUNT; j++) {
+            printf("%d ", allocation[i][j]);
         }
+        
+        printf("\t\t");
+        
+        for (int j = 0; j < RESOURCE_COUNT; j++) {
+            printf("%d ", max[i][j]);
+        }
+        
         printf("\n");
     }
 }
-void CalNeed()
-{
-    int i, j;
-    for (i = 0; i < N; i++)
-    {
-        for (j = 0; j < M; j++)
-        {
-            Need[i][j] = Max[i][j] - Alloc[i][j];
-        }
-    }
-}
-int IsFeasible(int Pno)
-{
-    int i;
-    for (i = 0; i < M; i++)
-    {
-        if (Need[Pno][i] > Available[i])
-            return 0;
-    }
-    return 1;
-}
-void Banker()
-{
-    int k = 0, i, j, flags[10] = {0}, finish = 0;
 
-    while (finish != 1)
-    {
-        int allocated = 0;
-        for (i = 0; i < N; i++)
-        {
-            if (IsFeasible(i) && flags[i] != 1)
-            {
-                for (j = 0; j < M; j++)
-                {
-                    Available[j] += Alloc[i][j];
-                }
-                safeseq[k++] = i;
-                flags[i] = 1;
-                allocated = 1;
-            }
+
+void displayNeedMatrix() 
+{
+    printf("Process\tNeed\n");
+    printf("\tA B C\n");
+    
+    for (int i = 0; i < PROCESS_COUNT; i++) {
+        printf("P%d\t", i);
+        
+        for (int j = 0; j < RESOURCE_COUNT; j++) {
+            printf("%d ", need[i][j]);
         }
-        if (!allocated)
-            break;
-        finish = 1;
-        for (i = 0; i < N; i++)
-        {
-            if (flags[i] == 0)
-            {
-                finish = 0;
+        
+        printf("\n");
+    }
+}
+void displayAvailable() 
+{
+    printf("Available Resources: ");
+    
+    for (int i = 0; i < RESOURCE_COUNT; i++) {
+        printf("%d ", available[i]);
+    }
+    
+    printf("\n");
+}
+void acceptAvailable() 
+{
+    printf("Enter available resources (A B C): ");
+    
+    for (int i = 0; i < RESOURCE_COUNT; i++) {
+        scanf("%d", &available[i]);
+    }
+}
+
+int main() {
+    int choice;
+    calculateNeedMatrix();
+    
+    while (1) {
+        printf("\nMenu:\n");
+        printf("1. Accept Available\n");
+        printf("2. Display Allocation and Max\n");
+        printf("3. Display Need Matrix\n");
+        printf("4. Display Available\n");
+        printf("5. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                acceptAvailable();
                 break;
-            }
+            case 2:
+                displayAllocationAndMax();
+                break;
+            case 3:
+                displayNeedMatrix();
+                break;
+            case 4:
+                displayAvailable();
+                break;
+            case 5:
+                return 0;
+            default:
+                printf("Invalid choice, try again.\n");
         }
     }
-}
-void PrintSafeSeq()
-{
-    int i;
-    printf("\nSafe Sequence: ");
-    printf("<");
-    for (i = 0; i < N; i++)
-        printf("P%d->", safeseq[i]);
-    printf("\b>\n");
-}
-void NewRequest()
-{
-    int i;
-    int NewReq[10];
-    printf("\nEnter New Request for each resource:");
-    for (i = 0; i < M; i++)
-    {
-        printf("\n Enter %c: ", 'A' + i);
-        scanf("%d", &NewReq[i]);
-    }
-    for (i = 0; i < M; i++)
-    {
-        if (NewReq[i] > tempAvailable[i])
-        {
-            printf("\nNot feasible, resource cannot be granted\n");
-            return;
-        }
-    }
-    printf("\nFeasible, resource can be granted\n");
-}
-int main()
-{
-    AcceptInput();
-    CalNeed();
-    printf("\nMAX:\n");
-    DisplayMatrix(Max, N, M);
-    printf("\nALLOCATION:\n");
-    DisplayMatrix(Alloc, N, M);
-    printf("\nNEED:\n");
-    DisplayMatrix(Need, N, M);
-    Banker();
-    PrintSafeSeq();
-    NewRequest();
+    
     return 0;
 }
